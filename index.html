@@ -92,9 +92,15 @@ on<!DOCTYPE html>
         
             await fetch(SHEET_URL, {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(lastResponse)
+              headers: {
+                "Content-Type": "text/plain"
+              },
+              body: JSON.stringify({
+                name: userName,
+                dates: Array.from(selectedDates)
+              })
             });
+
         
           } catch (error) {
             alert("Fehler beim Speichern der Daten");
@@ -575,7 +581,7 @@ on<!DOCTYPE html>
 
                 <div className="mt-6 text-center text-sm text-gray-600">
                   <p className="mt-1 text-blue-600 font-medium">📅 Zeitraum: Bayerische Sommerferien (August - September 2025)</p>
-                  <p className="mt-2 text-xs text-gray-500">Version: 0.02</p>
+                  <p className="mt-2 text-xs text-gray-500">Version: 0.03</p>
                 </div>
               </div>
             </div>
