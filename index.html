@@ -8,527 +8,569 @@
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
     <div id="root"></div>
     <script type="text/babel">
-        import React, { useState, useEffect } from 'react';
-import { Calendar, Users, BarChart3, Download, Upload } from 'lucide-react';
+        const { useState, useEffect } = React;
 
-const VacationPlanner = () => {
-  const [view, setView] = useState('input'); // 'input' or 'results'
-  const [userName, setUserName] = useState('');
-  const [selectedDates, setSelectedDates] = useState(new Set());
-  const [allResponses, setAllResponses] = useState([]);
-  const [currentMonth, setCurrentMonth] = useState(new Date(2025, 7, 1)); // August 2025
-  const [showNameInput, setShowNameInput] = useState(true);
+        // Lucide Icons als React-Komponenten
+        const Calendar = ({ className }) => (
+          <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+        );
 
-  useEffect(() => {
-    loadResponses();
-  }, []);
+        const Users = ({ className }) => (
+          <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+        );
 
-  const loadResponses = async () => {
-    try {
-      const result = await window.storage.get('vacation-responses');
-      if (result && result.value) {
-        setAllResponses(JSON.parse(result.value));
-      }
-    } catch (error) {
-      console.log('Keine gespeicherten Daten gefunden');
-    }
-  };
+        const BarChart3 = ({ className }) => (
+          <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 3v18h18"></path>
+            <path d="M18 17V9"></path>
+            <path d="M13 17V5"></path>
+            <path d="M8 17v-3"></path>
+          </svg>
+        );
 
-  const saveResponses = async (responses) => {
-    try {
-      await window.storage.set('vacation-responses', JSON.stringify(responses), true);
-    } catch (error) {
-      console.error('Fehler beim Speichern:', error);
-    }
-  };
+        const Download = ({ className }) => (
+          <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+        );
 
-  const getDaysInMonth = (date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay();
-    
-    return { daysInMonth, startingDayOfWeek: startingDayOfWeek === 0 ? 6 : startingDayOfWeek - 1 };
-  };
+        const Upload = ({ className }) => (
+          <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+        );
 
-  const formatDate = (date) => {
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-  };
+        const VacationPlanner = () => {
+          const [view, setView] = useState('input');
+          const [userName, setUserName] = useState('');
+          const [selectedDates, setSelectedDates] = useState(new Set());
+          const [allResponses, setAllResponses] = useState([]);
+          const [currentMonth, setCurrentMonth] = useState(new Date(2025, 7, 1));
+          const [showNameInput, setShowNameInput] = useState(true);
 
-  const parseDate = (dateStr) => {
-    const [year, month, day] = dateStr.split('-').map(Number);
-    return new Date(year, month - 1, day);
-  };
+          useEffect(() => {
+            loadResponses();
+          }, []);
 
-  const toggleDate = (day) => {
-    const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
-    const dateStr = formatDate(date);
-    const newSelected = new Set(selectedDates);
-    
-    if (newSelected.has(dateStr)) {
-      newSelected.delete(dateStr);
-    } else {
-      newSelected.add(dateStr);
-    }
-    setSelectedDates(newSelected);
-  };
-
-  const selectWeek = (weekStart) => {
-    const newSelected = new Set(selectedDates);
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), weekStart + i);
-      if (date.getMonth() === currentMonth.getMonth()) {
-        newSelected.add(formatDate(date));
-      }
-    }
-    setSelectedDates(newSelected);
-  };
-
-  const submitAvailability = () => {
-    if (!userName.trim()) {
-      alert('Bitte gib deinen Namen ein!');
-      return;
-    }
-    if (selectedDates.size === 0) {
-      alert('Bitte wähle mindestens einen Tag aus!');
-      return;
-    }
-
-    const newResponse = {
-      name: userName,
-      dates: Array.from(selectedDates),
-      timestamp: new Date().toISOString()
-    };
-
-    const existingIndex = allResponses.findIndex(r => r.name === userName);
-    let updatedResponses;
-    
-    if (existingIndex >= 0) {
-      updatedResponses = [...allResponses];
-      updatedResponses[existingIndex] = newResponse;
-    } else {
-      updatedResponses = [...allResponses, newResponse];
-    }
-
-    setAllResponses(updatedResponses);
-    saveResponses(updatedResponses);
-    
-    alert('Deine Verfügbarkeit wurde gespeichert!');
-    setUserName('');
-    setSelectedDates(new Set());
-    setShowNameInput(true);
-  };
-
-  const findBestDates = () => {
-    if (allResponses.length === 0) {
-      alert('Noch keine Antworten vorhanden!');
-      return [];
-    }
-
-    const dateCounts = {};
-    allResponses.forEach(response => {
-      response.dates.forEach(date => {
-        dateCounts[date] = (dateCounts[date] || 0) + 1;
-      });
-    });
-
-    const sortedDates = Object.entries(dateCounts)
-      .map(([date, count]) => ({ date, count }))
-      .sort((a, b) => new Date(a.date) - new Date(b.date));
-
-    const consecutiveRanges = [];
-    let currentRange = [];
-
-    sortedDates.forEach(({ date, count }) => {
-      if (currentRange.length === 0) {
-        currentRange = [{ date, count }];
-      } else {
-        const lastDate = parseDate(currentRange[currentRange.length - 1].date);
-        const currentDate = parseDate(date);
-        const diffDays = Math.round((currentDate - lastDate) / (1000 * 60 * 60 * 24));
-
-        if (diffDays === 1) {
-          currentRange.push({ date, count });
-        } else {
-          if (currentRange.length >= 3) {
-            consecutiveRanges.push([...currentRange]);
-          }
-          currentRange = [{ date, count }];
-        }
-      }
-    });
-
-    if (currentRange.length >= 3) {
-      consecutiveRanges.push(currentRange);
-    }
-
-    consecutiveRanges.sort((a, b) => {
-      const avgA = a.reduce((sum, d) => sum + d.count, 0) / a.length;
-      const avgB = b.reduce((sum, d) => sum + d.count, 0) / b.length;
-      return avgB - avgA;
-    });
-
-    return consecutiveRanges;
-  };
-
-  const showResults = () => {
-    const bestRanges = findBestDates();
-    if (bestRanges.length === 0) {
-      alert('Keine passenden Zeiträume gefunden (mindestens 3 aufeinanderfolgende Tage erforderlich)!');
-      return;
-    }
-    setView('results');
-  };
-
-  const exportData = () => {
-    const dataStr = JSON.stringify(allResponses, null, 2);
-    const blob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'freizeit-umfrage.json';
-    link.click();
-  };
-
-  const importData = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        try {
-          const imported = JSON.parse(event.target.result);
-          setAllResponses(imported);
-          saveResponses(imported);
-          alert('Daten erfolgreich importiert!');
-        } catch (error) {
-          alert('Fehler beim Importieren der Daten!');
-        }
-      };
-      reader.readAsText(file);
-    }
-  };
-
-  const renderCalendar = (isResultView = false) => {
-    const { daysInMonth, startingDayOfWeek } = getDaysInMonth(currentMonth);
-    const weeks = [];
-    let currentWeek = Array(startingDayOfWeek).fill(null);
-
-    let dateCounts = {};
-    if (isResultView) {
-      allResponses.forEach(response => {
-        response.dates.forEach(date => {
-          dateCounts[date] = (dateCounts[date] || 0) + 1;
-        });
-      });
-    }
-
-    const bestRanges = isResultView ? findBestDates() : [];
-    const bestDates = new Set();
-    if (bestRanges.length > 0) {
-      bestRanges[0].forEach(({ date }) => bestDates.add(date));
-    }
-
-    for (let day = 1; day <= daysInMonth; day++) {
-      currentWeek.push(day);
-      if (currentWeek.length === 7) {
-        weeks.push(currentWeek);
-        currentWeek = [];
-      }
-    }
-    if (currentWeek.length > 0) {
-      while (currentWeek.length < 7) {
-        currentWeek.push(null);
-      }
-      weeks.push(currentWeek);
-    }
-
-    return (
-      <div className="space-y-2">
-        <div className="grid grid-cols-7 gap-1 text-center font-semibold text-sm text-gray-700 mb-2">
-          <div>Mo</div>
-          <div>Di</div>
-          <div>Mi</div>
-          <div>Do</div>
-          <div>Fr</div>
-          <div>Sa</div>
-          <div>So</div>
-        </div>
-        {weeks.map((week, weekIndex) => (
-          <div key={weekIndex} className="grid grid-cols-7 gap-1">
-            {week.map((day, dayIndex) => {
-              if (day === null) {
-                return <div key={dayIndex} className="aspect-square"></div>;
+          const loadResponses = () => {
+            try {
+              const stored = localStorage.getItem('vacation-responses');
+              if (stored) {
+                setAllResponses(JSON.parse(stored));
               }
+            } catch (error) {
+              console.log('Keine gespeicherten Daten gefunden');
+            }
+          };
 
-              const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
-              const dateStr = formatDate(date);
-              const isSelected = selectedDates.has(dateStr);
-              const count = dateCounts[dateStr] || 0;
-              const isBest = bestDates.has(dateStr);
-              const maxCount = Math.max(...Object.values(dateCounts), 1);
-              const intensity = count / maxCount;
+          const saveResponses = (responses) => {
+            try {
+              localStorage.setItem('vacation-responses', JSON.stringify(responses));
+            } catch (error) {
+              console.error('Fehler beim Speichern:', error);
+            }
+          };
 
-              return (
-                <button
-                  key={dayIndex}
-                  onClick={() => !isResultView && toggleDate(day)}
-                  disabled={isResultView}
-                  className={`aspect-square rounded-lg text-sm font-medium transition-all relative
-                    ${!isResultView && isSelected ? 'bg-blue-500 text-white shadow-md' : ''}
-                    ${!isResultView && !isSelected ? 'bg-gray-100 hover:bg-gray-200 text-gray-700' : ''}
-                    ${isResultView && isBest ? 'bg-green-500 text-white shadow-lg ring-2 ring-green-400' : ''}
-                    ${isResultView && !isBest && count > 0 ? `bg-blue-${Math.round(intensity * 4) * 100} text-white` : ''}
-                    ${isResultView && count === 0 ? 'bg-gray-100 text-gray-400' : ''}
-                  `}
-                  style={isResultView && !isBest && count > 0 ? {
-                    backgroundColor: `rgba(59, 130, 246, ${0.3 + intensity * 0.7})`
-                  } : {}}
-                >
-                  <div>{day}</div>
-                  {isResultView && count > 0 && (
-                    <div className="text-xs font-bold">{count}</div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        ))}
-        {!isResultView && (
-          <div className="mt-4 space-y-2">
-            {weeks.map((week, weekIndex) => {
-              const weekStart = week.find(d => d !== null);
-              if (!weekStart) return null;
-              
-              return (
-                <button
-                  key={weekIndex}
-                  onClick={() => selectWeek(weekStart)}
-                  className="w-full py-2 px-4 bg-indigo-100 hover:bg-indigo-200 rounded-lg text-sm font-medium text-indigo-700 transition-colors"
-                >
-                  Woche {weekIndex + 1} auswählen
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    );
-  };
+          const getDaysInMonth = (date) => {
+            const year = date.getFullYear();
+            const month = date.getMonth();
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startingDayOfWeek = firstDay.getDay();
+            
+            return { daysInMonth, startingDayOfWeek: startingDayOfWeek === 0 ? 6 : startingDayOfWeek - 1 };
+          };
 
-  const monthNames = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+          const formatDate = (date) => {
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+          };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <Calendar className="w-8 h-8 text-blue-600" />
-              <h1 className="text-3xl font-bold text-gray-800">Freizeit-Planer</h1>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setView('input')}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  view === 'input' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                Eingabe
-              </button>
-              <button
-                onClick={showResults}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  view === 'results' ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                Ergebnisse
-              </button>
-            </div>
-          </div>
+          const parseDate = (dateStr) => {
+            const [year, month, day] = dateStr.split('-').map(Number);
+            return new Date(year, month - 1, day);
+          };
 
-          {view === 'input' ? (
-            <div className="space-y-6">
-              {showNameInput ? (
-                <div className="space-y-4">
-                  <label className="block text-sm font-medium text-gray-700">Dein Name</label>
-                  <input
-                    type="text"
-                    value={userName}
-                    onChange={(e) => setUserName(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && userName.trim() && setShowNameInput(false)}
-                    placeholder="Name eingeben..."
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-lg"
-                  />
-                  <button
-                    onClick={() => userName.trim() && setShowNameInput(false)}
-                    disabled={!userName.trim()}
-                    className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white font-semibold py-3 rounded-lg transition-colors"
-                  >
-                    Weiter zum Kalender
-                  </button>
+          const toggleDate = (day) => {
+            const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+            const dateStr = formatDate(date);
+            const newSelected = new Set(selectedDates);
+            
+            if (newSelected.has(dateStr)) {
+              newSelected.delete(dateStr);
+            } else {
+              newSelected.add(dateStr);
+            }
+            setSelectedDates(newSelected);
+          };
+
+          const selectWeek = (weekStart) => {
+            const newSelected = new Set(selectedDates);
+            for (let i = 0; i < 7; i++) {
+              const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), weekStart + i);
+              if (date.getMonth() === currentMonth.getMonth()) {
+                newSelected.add(formatDate(date));
+              }
+            }
+            setSelectedDates(newSelected);
+          };
+
+          const submitAvailability = () => {
+            if (!userName.trim()) {
+              alert('Bitte gib deinen Namen ein!');
+              return;
+            }
+            if (selectedDates.size === 0) {
+              alert('Bitte wähle mindestens einen Tag aus!');
+              return;
+            }
+
+            const newResponse = {
+              name: userName,
+              dates: Array.from(selectedDates),
+              timestamp: new Date().toISOString()
+            };
+
+            const existingIndex = allResponses.findIndex(r => r.name === userName);
+            let updatedResponses;
+            
+            if (existingIndex >= 0) {
+              updatedResponses = [...allResponses];
+              updatedResponses[existingIndex] = newResponse;
+            } else {
+              updatedResponses = [...allResponses, newResponse];
+            }
+
+            setAllResponses(updatedResponses);
+            saveResponses(updatedResponses);
+            
+            alert('Deine Verfügbarkeit wurde gespeichert!');
+            setUserName('');
+            setSelectedDates(new Set());
+            setShowNameInput(true);
+          };
+
+          const findBestDates = () => {
+            if (allResponses.length === 0) {
+              return [];
+            }
+
+            const dateCounts = {};
+            allResponses.forEach(response => {
+              response.dates.forEach(date => {
+                dateCounts[date] = (dateCounts[date] || 0) + 1;
+              });
+            });
+
+            const sortedDates = Object.entries(dateCounts)
+              .map(([date, count]) => ({ date, count }))
+              .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            const consecutiveRanges = [];
+            let currentRange = [];
+
+            sortedDates.forEach(({ date, count }) => {
+              if (currentRange.length === 0) {
+                currentRange = [{ date, count }];
+              } else {
+                const lastDate = parseDate(currentRange[currentRange.length - 1].date);
+                const currentDate = parseDate(date);
+                const diffDays = Math.round((currentDate - lastDate) / (1000 * 60 * 60 * 24));
+
+                if (diffDays === 1) {
+                  currentRange.push({ date, count });
+                } else {
+                  if (currentRange.length >= 3) {
+                    consecutiveRanges.push([...currentRange]);
+                  }
+                  currentRange = [{ date, count }];
+                }
+              }
+            });
+
+            if (currentRange.length >= 3) {
+              consecutiveRanges.push(currentRange);
+            }
+
+            consecutiveRanges.sort((a, b) => {
+              const avgA = a.reduce((sum, d) => sum + d.count, 0) / a.length;
+              const avgB = b.reduce((sum, d) => sum + d.count, 0) / b.length;
+              return avgB - avgA;
+            });
+
+            return consecutiveRanges;
+          };
+
+          const showResults = () => {
+            const bestRanges = findBestDates();
+            if (bestRanges.length === 0) {
+              alert('Keine passenden Zeiträume gefunden (mindestens 3 aufeinanderfolgende Tage erforderlich)!');
+              return;
+            }
+            setView('results');
+          };
+
+          const exportData = () => {
+            const dataStr = JSON.stringify(allResponses, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'freizeit-umfrage.json';
+            link.click();
+          };
+
+          const importData = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+              const reader = new FileReader();
+              reader.onload = (event) => {
+                try {
+                  const imported = JSON.parse(event.target.result);
+                  setAllResponses(imported);
+                  saveResponses(imported);
+                  alert('Daten erfolgreich importiert!');
+                } catch (error) {
+                  alert('Fehler beim Importieren der Daten!');
+                }
+              };
+              reader.readAsText(file);
+            }
+          };
+
+          const renderCalendar = (isResultView = false) => {
+            const { daysInMonth, startingDayOfWeek } = getDaysInMonth(currentMonth);
+            const weeks = [];
+            let currentWeek = Array(startingDayOfWeek).fill(null);
+
+            let dateCounts = {};
+            if (isResultView) {
+              allResponses.forEach(response => {
+                response.dates.forEach(date => {
+                  dateCounts[date] = (dateCounts[date] || 0) + 1;
+                });
+              });
+            }
+
+            const bestRanges = isResultView ? findBestDates() : [];
+            const bestDates = new Set();
+            if (bestRanges.length > 0) {
+              bestRanges[0].forEach(({ date }) => bestDates.add(date));
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+              currentWeek.push(day);
+              if (currentWeek.length === 7) {
+                weeks.push(currentWeek);
+                currentWeek = [];
+              }
+            }
+            if (currentWeek.length > 0) {
+              while (currentWeek.length < 7) {
+                currentWeek.push(null);
+              }
+              weeks.push(currentWeek);
+            }
+
+            return (
+              <div className="space-y-2">
+                <div className="grid grid-cols-7 gap-1 text-center font-semibold text-sm text-gray-700 mb-2">
+                  <div>Mo</div>
+                  <div>Di</div>
+                  <div>Mi</div>
+                  <div>Do</div>
+                  <div>Fr</div>
+                  <div>Sa</div>
+                  <div>So</div>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <div className="text-sm text-gray-600">
-                      Angemeldet als: <span className="font-semibold text-gray-800">{userName}</span>
-                    </div>
-                    <button
-                      onClick={() => setShowNameInput(true)}
-                      className="text-sm text-blue-600 hover:text-blue-700"
-                    >
-                      Namen ändern
-                    </button>
+                {weeks.map((week, weekIndex) => (
+                  <div key={weekIndex} className="grid grid-cols-7 gap-1">
+                    {week.map((day, dayIndex) => {
+                      if (day === null) {
+                        return <div key={dayIndex} className="aspect-square"></div>;
+                      }
+
+                      const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+                      const dateStr = formatDate(date);
+                      const isSelected = selectedDates.has(dateStr);
+                      const count = dateCounts[dateStr] || 0;
+                      const isBest = bestDates.has(dateStr);
+                      const maxCount = Math.max(...Object.values(dateCounts), 1);
+                      const intensity = count / maxCount;
+
+                      return (
+                        <button
+                          key={dayIndex}
+                          onClick={() => !isResultView && toggleDate(day)}
+                          disabled={isResultView}
+                          className={`aspect-square rounded-lg text-sm font-medium transition-all relative
+                            ${!isResultView && isSelected ? 'bg-blue-500 text-white shadow-md' : ''}
+                            ${!isResultView && !isSelected ? 'bg-gray-100 hover:bg-gray-200 text-gray-700' : ''}
+                            ${isResultView && isBest ? 'bg-green-500 text-white shadow-lg ring-2 ring-green-400' : ''}
+                            ${isResultView && !isBest && count > 0 ? `bg-blue-${Math.round(intensity * 4) * 100} text-white` : ''}
+                            ${isResultView && count === 0 ? 'bg-gray-100 text-gray-400' : ''}
+                          `}
+                          style={isResultView && !isBest && count > 0 ? {
+                            backgroundColor: `rgba(59, 130, 246, ${0.3 + intensity * 0.7})`
+                          } : {}}
+                        >
+                          <div>{day}</div>
+                          {isResultView && count > 0 && (
+                            <div className="text-xs font-bold">{count}</div>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
-
-                  <div className="flex justify-between items-center mb-4">
-                    <button
-                      onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
-                      disabled={currentMonth.getMonth() === 7}
-                      className="px-4 py-2 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed rounded-lg font-medium"
-                    >
-                      ←
-                    </button>
-                    <h2 className="text-xl font-bold text-gray-800">
-                      {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
-                    </h2>
-                    <button
-                      onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
-                      disabled={currentMonth.getMonth() === 8}
-                      className="px-4 py-2 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed rounded-lg font-medium"
-                    >
-                      →
-                    </button>
+                ))}
+                {!isResultView && (
+                  <div className="mt-4 space-y-2">
+                    {weeks.map((week, weekIndex) => {
+                      const weekStart = week.find(d => d !== null);
+                      if (!weekStart) return null;
+                      
+                      return (
+                        <button
+                          key={weekIndex}
+                          onClick={() => selectWeek(weekStart)}
+                          className="w-full py-2 px-4 bg-indigo-100 hover:bg-indigo-200 rounded-lg text-sm font-medium text-indigo-700 transition-colors"
+                        >
+                          Woche {weekIndex + 1} auswählen
+                        </button>
+                      );
+                    })}
                   </div>
-
-                  {renderCalendar(false)}
-
-                  <div className="bg-blue-50 rounded-lg p-4 text-sm text-blue-800">
-                    <strong>{selectedDates.size}</strong> Tage ausgewählt
-                  </div>
-
-                  <button
-                    onClick={submitAvailability}
-                    className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 rounded-lg transition-colors"
-                  >
-                    Verfügbarkeit speichern
-                  </button>
-                </div>
-              )}
-
-              <div className="border-t pt-6 space-y-4">
-                <h3 className="font-semibold text-gray-800 flex items-center gap-2">
-                  <Users className="w-5 h-5" />
-                  Bisherige Antworten ({allResponses.length})
-                </h3>
-                {allResponses.length > 0 ? (
-                  <div className="space-y-2">
-                    {allResponses.map((response, idx) => (
-                      <div key={idx} className="bg-gray-50 rounded-lg p-3 text-sm">
-                        <strong>{response.name}</strong>: {response.dates.length} Tage
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-500 text-sm">Noch keine Antworten vorhanden</p>
                 )}
-
-                <div className="flex gap-2">
-                  <button
-                    onClick={exportData}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium"
-                  >
-                    <Download className="w-4 h-4" />
-                    Exportieren
-                  </button>
-                  <label className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium cursor-pointer">
-                    <Upload className="w-4 h-4" />
-                    Importieren
-                    <input type="file" accept=".json" onChange={importData} className="hidden" />
-                  </label>
-                </div>
               </div>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center mb-4">
-                <button
-                  onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
-                  disabled={currentMonth.getMonth() === 7}
-                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed rounded-lg font-medium"
-                >
-                  ←
-                </button>
-                <h2 className="text-xl font-bold text-gray-800">
-                  {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
-                </h2>
-                <button
-                  onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
-                  disabled={currentMonth.getMonth() === 8}
-                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed rounded-lg font-medium"
-                >
-                  →
-                </button>
-              </div>
+            );
+          };
 
-              {renderCalendar(true)}
+          const monthNames = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
 
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-6 border-2 border-green-200">
-                <h3 className="font-bold text-lg text-green-800 mb-3 flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5" />
-                  Beste Zeiträume
-                </h3>
-                {findBestDates().slice(0, 3).map((range, idx) => {
-                  const avgCount = range.reduce((sum, d) => sum + d.count, 0) / range.length;
-                  const startDate = parseDate(range[0].date);
-                  const endDate = parseDate(range[range.length - 1].date);
-                  
-                  return (
-                    <div key={idx} className={`p-4 rounded-lg mb-3 ${idx === 0 ? 'bg-green-100 border-2 border-green-400' : 'bg-white'}`}>
-                      <div className="font-semibold text-gray-800">
-                        {idx === 0 && '🏆 '}{startDate.toLocaleDateString('de-DE')} - {endDate.toLocaleDateString('de-DE')}
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        {range.length} Tage, ⌀ {avgCount.toFixed(1)} Teilnehmer
+          return (
+            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+              <div className="max-w-4xl mx-auto">
+                <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                      <Calendar className="w-8 h-8 text-blue-600" />
+                      <h1 className="text-3xl font-bold text-gray-800">Freizeit-Planer</h1>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setView('input')}
+                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                          view === 'input' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                      >
+                        Eingabe
+                      </button>
+                      <button
+                        onClick={showResults}
+                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                          view === 'results' ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                      >
+                        Ergebnisse
+                      </button>
+                    </div>
+                  </div>
+
+                  {view === 'input' ? (
+                    <div className="space-y-6">
+                      {showNameInput ? (
+                        <div className="space-y-4">
+                          <label className="block text-sm font-medium text-gray-700">Dein Name</label>
+                          <input
+                            type="text"
+                            value={userName}
+                            onChange={(e) => setUserName(e.target.value)}
+                            onKeyPress={(e) => e.key === 'Enter' && userName.trim() && setShowNameInput(false)}
+                            placeholder="Name eingeben..."
+                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-lg"
+                          />
+                          <button
+                            onClick={() => userName.trim() && setShowNameInput(false)}
+                            disabled={!userName.trim()}
+                            className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white font-semibold py-3 rounded-lg transition-colors"
+                          >
+                            Weiter zum Kalender
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center">
+                            <div className="text-sm text-gray-600">
+                              Angemeldet als: <span className="font-semibold text-gray-800">{userName}</span>
+                            </div>
+                            <button
+                              onClick={() => setShowNameInput(true)}
+                              className="text-sm text-blue-600 hover:text-blue-700"
+                            >
+                              Namen ändern
+                            </button>
+                          </div>
+
+                          <div className="flex justify-between items-center mb-4">
+                            <button
+                              onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
+                              disabled={currentMonth.getMonth() === 7}
+                              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed rounded-lg font-medium"
+                            >
+                              ←
+                            </button>
+                            <h2 className="text-xl font-bold text-gray-800">
+                              {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
+                            </h2>
+                            <button
+                              onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
+                              disabled={currentMonth.getMonth() === 8}
+                              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed rounded-lg font-medium"
+                            >
+                              →
+                            </button>
+                          </div>
+
+                          {renderCalendar(false)}
+
+                          <div className="bg-blue-50 rounded-lg p-4 text-sm text-blue-800">
+                            <strong>{selectedDates.size}</strong> Tage ausgewählt
+                          </div>
+
+                          <button
+                            onClick={submitAvailability}
+                            className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 rounded-lg transition-colors"
+                          >
+                            Verfügbarkeit speichern
+                          </button>
+                        </div>
+                      )}
+
+                      <div className="border-t pt-6 space-y-4">
+                        <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+                          <Users className="w-5 h-5" />
+                          Bisherige Antworten ({allResponses.length})
+                        </h3>
+                        {allResponses.length > 0 ? (
+                          <div className="space-y-2">
+                            {allResponses.map((response, idx) => (
+                              <div key={idx} className="bg-gray-50 rounded-lg p-3 text-sm">
+                                <strong>{response.name}</strong>: {response.dates.length} Tage
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-gray-500 text-sm">Noch keine Antworten vorhanden</p>
+                        )}
+
+                        <div className="flex gap-2">
+                          <button
+                            onClick={exportData}
+                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium"
+                          >
+                            <Download className="w-4 h-4" />
+                            Exportieren
+                          </button>
+                          <label className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium cursor-pointer">
+                            <Upload className="w-4 h-4" />
+                            Importieren
+                            <input type="file" accept=".json" onChange={importData} className="hidden" />
+                          </label>
+                        </div>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
+                  ) : (
+                    <div className="space-y-6">
+                      <div className="flex justify-between items-center mb-4">
+                        <button
+                          onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
+                          disabled={currentMonth.getMonth() === 7}
+                          className="px-4 py-2 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed rounded-lg font-medium"
+                        >
+                          ←
+                        </button>
+                        <h2 className="text-xl font-bold text-gray-800">
+                          {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
+                        </h2>
+                        <button
+                          onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
+                          disabled={currentMonth.getMonth() === 8}
+                          className="px-4 py-2 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed rounded-lg font-medium"
+                        >
+                          →
+                        </button>
+                      </div>
 
-              <div className="text-sm text-gray-600 bg-gray-50 rounded-lg p-4">
-                <strong>Legende:</strong>
-                <div className="mt-2 space-y-1">
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 bg-green-500 rounded"></div>
-                    <span>Beste zusammenhängende Tage (mind. 3 Tage)</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 bg-blue-500 rounded"></div>
-                    <span>Andere verfügbare Tage (Intensität = Teilnehmerzahl)</span>
-                  </div>
+                      {renderCalendar(true)}
+
+                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-6 border-2 border-green-200">
+                        <h3 className="font-bold text-lg text-green-800 mb-3 flex items-center gap-2">
+                          <BarChart3 className="w-5 h-5" />
+                          Beste Zeiträume
+                        </h3>
+                        {findBestDates().slice(0, 3).map((range, idx) => {
+                          const avgCount = range.reduce((sum, d) => sum + d.count, 0) / range.length;
+                          const startDate = parseDate(range[0].date);
+                          const endDate = parseDate(range[range.length - 1].date);
+                          
+                          return (
+                            <div key={idx} className={`p-4 rounded-lg mb-3 ${idx === 0 ? 'bg-green-100 border-2 border-green-400' : 'bg-white'}`}>
+                              <div className="font-semibold text-gray-800">
+                                {idx === 0 && '🏆 '}{startDate.toLocaleDateString('de-DE')} - {endDate.toLocaleDateString('de-DE')}
+                              </div>
+                              <div className="text-sm text-gray-600">
+                                {range.length} Tage, ⌀ {avgCount.toFixed(1)} Teilnehmer
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      <div className="text-sm text-gray-600 bg-gray-50 rounded-lg p-4">
+                        <strong>Legende:</strong>
+                        <div className="mt-2 space-y-1">
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 bg-green-500 rounded"></div>
+                            <span>Beste zusammenhängende Tage (mind. 3 Tage)</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 bg-blue-500 rounded"></div>
+                            <span>Andere verfügbare Tage (Intensität = Teilnehmerzahl)</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-6 text-center text-sm text-gray-600">
+                  <p className="mt-1 text-blue-600 font-medium">📅 Zeitraum: Bayerische Sommerferien (August - September 2025)</p>
+                  <p className="mt-2 text-xs text-gray-500">Hinweis: Daten werden im Browser gespeichert. Jeder Nutzer sieht nur seine eigenen Eingaben.</p>
                 </div>
               </div>
             </div>
-          )}
-        </div>
+          );
+        };
 
-        <div className="mt-6 text-center text-sm text-gray-600">
-          <p>Die Daten werden geteilt gespeichert - alle Nutzer sehen die gleichen Ergebnisse</p>
-          <p className="mt-1 text-blue-600 font-medium">📅 Zeitraum: Bayerische Sommerferien (August - September 2025)</p>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default VacationPlanner;
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<VacationPlanner />);
     </script>
