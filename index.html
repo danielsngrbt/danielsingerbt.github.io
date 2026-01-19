@@ -68,8 +68,11 @@ on<!DOCTYPE html>
           const [showNameInput, setShowNameInput] = useState(true);
 
           useEffect(() => {
-            loadResponses();
-          }, []);
+              loadResponses();
+              const interval = setInterval(loadResponses, 10000);
+              return () => clearInterval(interval);
+        }, []);
+
 
         const SHEET_URL = "https://script.google.com/macros/s/AKfycbzjiNHLpj7skA1RcQe9MC0CTGzp-rci54tQQLk0iEqB1uo-IBrfKpPbqAWwSW_JniqM/exec";
 
@@ -100,6 +103,8 @@ on<!DOCTYPE html>
                 dates: Array.from(selectedDates)
               })
             });
+
+            loadResponses();
 
         
           } catch (error) {
