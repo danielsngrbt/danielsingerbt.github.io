@@ -71,24 +71,35 @@
             loadResponses();
           }, []);
 
-          const loadResponses = () => {
-            try {
-              const stored = localStorage.getItem('vacation-responses');
-              if (stored) {
-                setAllResponses(JSON.parse(stored));
-              }
-            } catch (error) {
-              console.log('Keine gespeicherten Daten gefunden');
-            }
-          };
+        const SHEET_URL = "https://script.google.com/macros/s/AKfycbzjiNHLpj7skA1RcQe9MC0CTGzp-rci54tQQLk0iEqB1uo-IBrfKpPbqAWwSW_JniqM/exec";
 
-          const saveResponses = (responses) => {
-            try {
-              localStorage.setItem('vacation-responses', JSON.stringify(responses));
-            } catch (error) {
-              console.error('Fehler beim Speichern:', error);
-            }
-          };
+        const loadResponses = async () => {
+          try {
+            const res = await fetch(SHEET_URL);
+            const data = await res.json();
+            setAllResponses(data);
+          } catch (err) {
+            console.error("Ladefehler", err);
+          }
+        };
+
+
+          
+
+        const saveResponses = async (responses) => {
+          try {
+            const lastResponse = responses[responses.length - 1];
+        
+            await fetch(SHEET_URL, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(lastResponse)
+            });
+        
+          } catch (error) {
+            alert("Fehler beim Speichern der Daten");
+          }
+        };
 
           const getDaysInMonth = (date) => {
             const year = date.getFullYear();
